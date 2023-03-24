@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -eo pipefail
+shopt -s nullglob globstar
+
+# activate conda env
+eval "$(conda shell.bash hook)"
+conda activate dmvae
+echo "CONDA_PREFIX: $CONDA_PREFIX"
+
+# add parent directory to PYTHONPATH
+parentdir="$(dirname "$PWD")"
+export PYTHONPATH="$PYTHONPATH:$parentdir"
+echo "PYTHONPATH: $PYTHONPATH"
+
+ipython main.py -- \
+  --data_dir="./mnist_svhn/data/MNIST_SVHN"                                   \
+  --log_dir="runs/tmp"                                                        \
+  --log-dir-versioning                                                        \
+  --likelihood_str="laplace-laplace"                                          \
+  --num_modalities 2                                                          \
+  --end_epoch 50                                                              \
+  --batch_size 1024                                                           \
+  --start_annealing 0                                                         \
+  --annealing_epochs 5                                                        \
+  --initial_learning_rate 0.001                                               \
+  --reconstruction_coefs 3.92 1.                                              \
+  --llik_scale_param 0.1 0.1                                                  \
+  --cm_dropout                                                                \
+  --num_workers 2                                                             \
+  --num_imp_samples 1000                                                      \
+  --eval_freq_likelihood 25                                                   \
+  --eval_freq_generation 10                                                   \
+  --eval_freq_fid 25                                                          \
+  \
+  --class_dim 10  --style_dim 10                                              \
+  --beta_prior_styles 100. 50.                                                \
+  --beta_prior_content 0.                                                     \
+  --beta_condreg 0.                                                           \
+  --infomax_coef 1000.                                                        \
+  --disentanglement_coefs 500. 100.                                           \
+  \
+  --disentangle_style_only                                                    \
+  --disjoint_partition                                                        \
+  --freeze_content                                                            \
+  --contrast_full_vs_subset                                                   \
+  --reparam_c_before_infomax                                                  \
+  # --random_seed 42                                                          \
+
+
+# NOTE: infomax_coef is gamma, beta_prior_styles are betas, and  
+# disentanglement_coefs are deltas

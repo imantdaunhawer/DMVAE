@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -eo pipefail
+shopt -s nullglob globstar
+
+# activate conda env
+eval "$(conda shell.bash hook)"
+conda activate dmvae
+echo "CONDA_PREFIX: $CONDA_PREFIX"
+echo "PYTHONPATH: $PYTHONPATH"
+
+# OPTIONS
+# NOTE: first command line argument is networks_dir
+# NOTE: further command line arguments is are experiment_dirs to be evaluated
+networks_dir=$1
+
+for experiment_dir in "${@:2}"; do
+    python post_hoc_analysis.py                                               \
+      --experiment-dir "$experiment_dir"                                      \
+      --networks-dir "$networks_dir"                                          \
+      --content-density-estimation "gmm100"                                   \
+      --num-fid-samples 10000                                                 \
+      --latent-classification                                                 \
+      > "$experiment_dir/results.txt"
+done
